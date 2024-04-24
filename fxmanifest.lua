@@ -18,10 +18,12 @@ client_scripts{
 	'@PolyZone/BoxZone.lua',
 	'@PolyZone/CircleZone.lua',
 	'@PolyZone/RemoveZone',
+
+	'client.lua'
 }
 
 server_scripts{
-
+	'server.lua'
 }
 
 shared_scripts {
