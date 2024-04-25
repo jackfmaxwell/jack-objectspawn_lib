@@ -19,7 +19,8 @@ client_scripts{
 	'@PolyZone/CircleZone.lua',
 	'@PolyZone/RemoveZone',
 
-	'client.lua'
+	'client.lua',
+	'gizmos_client.lua',
 }
 
 server_scripts{
@@ -31,3 +32,10 @@ shared_scripts {
 	'@ox_lib/init.lua'
  }
 
+
+ ui_page 'web/dist/index.html'
+
+ files {
+	'web/dist/index.html',
+	'web/dist/**/*',
+}
