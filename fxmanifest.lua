@@ -13,12 +13,6 @@ lua54 'yes'
 
 
 client_scripts{
-	'@PolyZone/client.lua',
-	'@PolyZone/EntityZone.lua',
-	'@PolyZone/BoxZone.lua',
-	'@PolyZone/CircleZone.lua',
-	'@PolyZone/RemoveZone',
-
 	'client.lua',
 	'gizmos_client.lua',
 }
