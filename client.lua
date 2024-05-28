@@ -1,46 +1,69 @@
-CHECK_TIME = 3*1000
---IS THIS EVEN NEEDED??
 
---Meant to be used during runtime
-RegisterNetEvent("jack-objectspawner_lib:client:spawnObject", function(modelName, position, isNetworked, isPersistent, setRotation, hasCollisions, hasPhysics, entityInteractionZone)
-    if position==nil then position = GetEntityCoords(PlayerPedId()) end
-    RequestModel(GetHashKey(modelName))
-    while not HasModelLoaded(GetHashKey(modelName)) do
-        Wait(0)
-    end
-    local objectHandle = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, isNetworked, true, false)
-    SetEntityRotation(objectHandle, setRotation.x, setRotation.y, setRotation.z, 2,false)
-    SetEntityCollision(objectHandle, hasCollisions, true)
-    SetEntityHasGravity(objectHandle, hasPhysics)
-    if entityInteractionZone~=nil then
-        
-    end
-    if isPersistent then
-        --Add to json to track them after server close and reopen
-    end
-end)
-
-RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function(modelName, pos, kill_Event)
-    local entity = GetClosestObjectOfType(pos.x, pos.y, pos.z, 10.0, modelName, false, false, false)
-    if not entity then
-        error("Could not find entity for model : " .. modelName, 2)
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, completeFunc)
+    local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
+    Wait(1)
+    if entity == 0 then
+        error("Could not find entity for model : " .. modelName .."\n Ensure the modelname is correct for the existing prop.", 2)
+        RequestModel(GetHashKey(modelName))
+        while not HasModelLoaded(GetHashKey(modelName)) do
+            Wait(0)
+        end
+        local createdObj = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, false)
+        Wait(1)
+        if not NetworkGetEntityIsNetworked(createdObj) then
+            NetworkRegisterEntityAsNetworked(createdObj)
+        end
+        FreezeEntityPosition(createdObj, true)
+        completeFunc(createdObj)
         return
     end
     if not NetworkGetEntityIsNetworked(entity) then
         NetworkRegisterEntityAsNetworked(entity)
     end
-    if kill_Event then
-        CreateThread(function()
-            while true do
-                if GetEntityHealth(entity)<=0 then
-                    TriggerEvent(kill_Event.event, kill_Event.args)
-                end
-                Wait(CHECK_TIME)
-            end
-        end)
-    end
-
+    FreezeEntityPosition(entity, true)
+    completeFunc(entity)
+    return
 end)
+RegisterNetEvent("jack-objectspawner_lib:client:deleteObject", function (modelName, position)
+    local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
+    Wait(1)
+    if entity~=0 then
+        SetEntityAsMissionEntity(entity, false, false)
+        DeleteObject(entity)
+    end
+end)
+RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelName, position, completeFunc)
+    local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
+    Wait(1)
+    if entity == 0 then
+        RequestModel(GetHashKey(modelName))
+        while not HasModelLoaded(GetHashKey(modelName)) do
+            Wait(0)
+        end
+        local createdObj = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, false)
+        Wait(1)
+        if not NetworkGetEntityIsNetworked(createdObj) then
+            NetworkRegisterEntityAsNetworked(createdObj)
+        end
+        SetEntityHeading(createdObj, position.w)
+        FreezeEntityPosition(createdObj, true)
+        print("Created object: " .. modelName)
+        completeFunc(createdObj)
+        return
+    end
+    warn("Object: " .. modelName .. " already exists..")
+    completeFunc(entity)
+    return
+end)
+
+RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName, model, pos, lock)
+    if not IsDoorRegisteredWithSystem(doorName) then
+        AddDoorToSystem(doorName, GetHashKey(model), pos.x, pos.y, pos.z, false, false, false)
+    end
+    DoorSystemSetDoorState(doorName, lock and 4 or 0, false, true)
+end)
+
+
 
 -- object placing view for deving?
 RegisterCommand('testPlaceObject',function(source, args, rawCommand)
