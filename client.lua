@@ -58,8 +58,11 @@ end)
 
 RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName, model, pos, lock)
     if not IsDoorRegisteredWithSystem(doorName) then
+        print("Add door " .. doorName .." to system")
         AddDoorToSystem(doorName, GetHashKey(model), pos.x, pos.y, pos.z, false, false, false)
     end
+    Wait(1)
+    print("Set door " .. doorName .. " state: " , lock and "4" or "0")
     DoorSystemSetDoorState(doorName, lock and 4 or 0, false, true)
 end)
 
