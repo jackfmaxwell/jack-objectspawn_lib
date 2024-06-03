@@ -57,13 +57,25 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelNam
 end)
 
 RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName, model, pos, lock)
+    local entity = 0
     if not IsDoorRegisteredWithSystem(doorName) then
         print("Add door " .. doorName .." to system")
-        AddDoorToSystem(doorName, GetHashKey(model), pos.x, pos.y, pos.z, false, false, false)
+        entity = GetClosestObjectOfType(pos.x, pos.y, pos.z, 5.0, GetHashKey(model), false, false, false)
+        Wait(1)
+        if entity~=0 then
+            local exactCoords = GetEntityCoords(entity)
+            AddDoorToSystem(doorName, GetHashKey(model), exactCoords.x, exactCoords.y, exactCoords.z, false, false, false)
+        else
+            warn("Could not find door ", doorName, " near position: ", pos)
+        end
+
     end
     Wait(1)
     print("Set door " .. doorName .. " state: " , lock and "4" or "0")
     DoorSystemSetDoorState(doorName, lock and 4 or 0, false, true)
+    if entity~=0 then
+        FreezeEntityPosition(entity, lock)
+    end
 end)
 
 
