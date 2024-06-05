@@ -3,19 +3,14 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
     local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
     Wait(1)
     if entity == 0 then
-        error("Could not find entity for model : " .. modelName .."\n Ensure the modelname is correct for the existing prop.", 2)
+        warn("Could not find entity for model : " .. modelName .." Ensure the modelname is correct for the existing prop.")
         RequestModel(GetHashKey(modelName))
         while not HasModelLoaded(GetHashKey(modelName)) do
             Wait(0)
         end
-        local createdObj = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, false)
+        entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, false)
         Wait(1)
-        if not NetworkGetEntityIsNetworked(createdObj) then
-            NetworkRegisterEntityAsNetworked(createdObj)
-        end
-        FreezeEntityPosition(createdObj, true)
-        completeFunc(createdObj)
-        return
+        print("Created object (defunk): " .. modelName)
     end
     if not NetworkGetEntityIsNetworked(entity) then
         NetworkRegisterEntityAsNetworked(entity)
@@ -73,9 +68,6 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName
     Wait(1)
     print("Set door " .. doorName .. " state: " , lock and "4" or "0")
     DoorSystemSetDoorState(doorName, lock and 4 or 0, false, true)
-    if entity~=0 then
-        FreezeEntityPosition(entity, lock)
-    end
 end)
 
 
