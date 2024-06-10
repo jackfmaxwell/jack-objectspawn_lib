@@ -1,5 +1,5 @@
 
-RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, completeFunc)
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, completeFunc) -- createIfCantFind
     local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
     Wait(1)
     if entity == 0 then
@@ -8,7 +8,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
         while not HasModelLoaded(GetHashKey(modelName)) do
             Wait(0)
         end
-        entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, false)
+        entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true)
         Wait(1)
         print("Created object (defunk): " .. modelName)
     end
@@ -35,16 +35,14 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelNam
         while not HasModelLoaded(GetHashKey(modelName)) do
             Wait(0)
         end
-        local createdObj = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, false)
+        entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true)
         Wait(1)
-        if not NetworkGetEntityIsNetworked(createdObj) then
-            NetworkRegisterEntityAsNetworked(createdObj)
+        if not NetworkGetEntityIsNetworked(entity) then
+            NetworkRegisterEntityAsNetworked(entity)
         end
-        SetEntityHeading(createdObj, position.w)
-        FreezeEntityPosition(createdObj, true)
+        SetEntityHeading(entity, position.w)
+        FreezeEntityPosition(entity, true)
         print("Created object: " .. modelName)
-        completeFunc(createdObj)
-        return
     end
     warn("Object: " .. modelName .. " already exists..")
     completeFunc(entity)
@@ -87,4 +85,4 @@ RegisterCommand('testPlaceObject',function(source, args, rawCommand)
     
     print(json.encode(objectPositionData, { indent = true }))
     DeleteEntity(objectPositionData.handle)
-end)
+end, false)
