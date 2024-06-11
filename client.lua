@@ -1,7 +1,35 @@
 
+function ConsistentGetClosestObject(position, modelName, range, iteration, timesFound)
+    if not iteration then iteration = 0 end
+    if not timesFound then timesFound = 0 end
+    if iteration>=10 then print("Didnt find: ", modelName) return nil end
+    Wait(10)
+    local entity = GetClosestObjectOfType(position.x, position.y, position.z, range, GetHashKey(modelName), false, false, false)
+    Wait(10)
+    if entity==0 then
+        Wait(50)
+        return ConsistentGetClosestObject(position, modelName, range, iteration+1, timesFound)
+    else
+        timesFound+=1
+        if timesFound>=3 then print("Found: ", modelName,  " ", entity) return entity
+        else return ConsistentGetClosestObject(position, modelName, range, iteration, timesFound) end
+    end
+end
+function ConsistentDeleteObject(modelName, entity, iteration)
+    if not iteration then iteration = 0 end
+    if iteration>=5 then return nil end
+    SetEntityAsMissionEntity(entity, false, false)
+    DeleteObject(entity)
+    Wait(50)
+    if DoesEntityExist(entity) and entity~=0 and entity~=nil then
+        ConsistentDeleteObject(modelName, entity, iteration+1)
+    else
+        print("Delete executed for ", modelName, " ", entity)
+    end
+end
+
 RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, completeFunc) -- createIfCantFind
-    local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
-    Wait(1)
+    local entity = ConsistentGetClosestObject(position, modelName, 0.5)
     if entity == 0 then
         warn("Could not find entity for model : " .. modelName .." Ensure the modelname is correct for the existing prop.")
         RequestModel(GetHashKey(modelName))
@@ -20,33 +48,43 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
     return
 end)
 RegisterNetEvent("jack-objectspawner_lib:client:deleteObject", function (modelName, position)
-    local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
-    Wait(1)
-    if entity~=0 then
-        SetEntityAsMissionEntity(entity, false, false)
-        DeleteObject(entity)
+    print("Deleting ", modelName, "...")
+    local entity = ConsistentGetClosestObject(position, modelName, 0.5)
+    if entity~=0 and entity~=nil then
+        ConsistentDeleteObject(modelName, entity)
     end
 end)
+RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function (modelName, position, complete)
+    print("Searching for  ", modelName, "...")
+    local entity = ConsistentGetClosestObject(position, modelName, 10.0)
+    if entity~=0 and entity~=nil then
+        ConsistentDeleteObject(modelName, entity)
+    end
+    complete()
+end)
+
+
 RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelName, position, completeFunc)
-    local entity = GetClosestObjectOfType(position.x, position.y, position.z, 0.2, GetHashKey(modelName), false, false, false)
-    Wait(1)
-    if entity == 0 then
+    print("Called to create: " , modelName)
+    local entity = ConsistentGetClosestObject(position, modelName, 0.2)
+    if entity == 0 or entity==nil then
         RequestModel(GetHashKey(modelName))
         while not HasModelLoaded(GetHashKey(modelName)) do
             Wait(0)
         end
         entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true)
         Wait(1)
+        
         if not NetworkGetEntityIsNetworked(entity) then
             NetworkRegisterEntityAsNetworked(entity)
         end
         SetEntityHeading(entity, position.w)
         FreezeEntityPosition(entity, true)
         print("Created object: " .. modelName)
+    else
+        warn("Object: " .. modelName .. " already exists..")
     end
-    warn("Object: " .. modelName .. " already exists..")
     completeFunc(entity)
-    return
 end)
 
 RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName, model, pos, lock)
