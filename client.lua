@@ -30,7 +30,7 @@ end
 
 RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.5)
-    if entity == 0 then
+    if entity == 0 or entity==nil then
         warn("Could not find entity for model : " .. modelName .." Ensure the modelname is correct for the existing prop.")
         RequestModel(GetHashKey(modelName))
         while not HasModelLoaded(GetHashKey(modelName)) do
@@ -38,6 +38,9 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
         end
         entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true)
         Wait(1)
+        if position.w~=nil then
+            SetEntityHeading(entity, position.w)
+        end
         print("Created object (defunk): " .. modelName)
     end
     if not NetworkGetEntityIsNetworked(entity) then
@@ -45,8 +48,28 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
     end
     FreezeEntityPosition(entity, true)
     completeFunc(entity)
-    return
 end)
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", function (modelName, position, rotation, completeFunc) -- createIfCantFind
+    local entity = ConsistentGetClosestObject(position, modelName, 0.5)
+    if entity == 0 or entity==nil then
+        warn("Could not find entity for model : " .. modelName .." Ensure the modelname is correct for the existing prop.")
+        RequestModel(GetHashKey(modelName))
+        while not HasModelLoaded(GetHashKey(modelName)) do
+            Wait(0)
+        end
+        entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true)
+        Wait(1)
+        SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 2, true)
+        print("Created object (defunk): " .. modelName)
+    end
+    SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 2, true)
+    if not NetworkGetEntityIsNetworked(entity) then
+        NetworkRegisterEntityAsNetworked(entity)
+    end
+    FreezeEntityPosition(entity, true)
+    completeFunc(entity)
+end)
+
 RegisterNetEvent("jack-objectspawner_lib:client:deleteObject", function (modelName, position)
     print("Deleting ", modelName, "...")
     local entity = ConsistentGetClosestObject(position, modelName, 0.5)
@@ -78,7 +101,35 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelNam
         if not NetworkGetEntityIsNetworked(entity) then
             NetworkRegisterEntityAsNetworked(entity)
         end
-        SetEntityHeading(entity, position.w)
+        
+        if position.w~=nil then
+            SetEntityRotation(entity, 0.0, 0.0, position.w, 2, true)
+        end
+        FreezeEntityPosition(entity, true)
+        print("Created object: " .. modelName)
+    else
+        warn("Object: " .. modelName .. " already exists..")
+    end
+    completeFunc(entity)
+end)
+RegisterNetEvent("jack-objectspawner_lib:client:createObjectWithRotation", function(modelName, position, rotation, completeFunc)
+    print("Called to create: " , modelName)
+    local entity = ConsistentGetClosestObject(position, modelName, 0.2)
+    if entity == 0 or entity==nil then
+        RequestModel(GetHashKey(modelName))
+        while not HasModelLoaded(GetHashKey(modelName)) do
+            Wait(0)
+        end
+        entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true)
+        Wait(1)
+        
+        if not NetworkGetEntityIsNetworked(entity) then
+            NetworkRegisterEntityAsNetworked(entity)
+        end
+        
+      
+        SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 2, true)
+    
         FreezeEntityPosition(entity, true)
         print("Created object: " .. modelName)
     else
@@ -103,7 +154,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName
     end
     Wait(1)
     print("Set door " .. doorName .. " state: " , lock and "4" or "0")
-    DoorSystemSetDoorState(doorName, lock and 4 or 0, false, true)
+    DoorSystemSetDoorState(doorName, lock and 4 or 3, false, true)
 end)
 
 
