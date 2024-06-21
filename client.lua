@@ -2,7 +2,7 @@
 function ConsistentGetClosestObject(position, modelName, range, iteration, timesFound)
     if not iteration then iteration = 0 end
     if not timesFound then timesFound = 0 end
-    if iteration>=10 then print("Didnt find: ", modelName) return nil end
+    if iteration>=10 then return nil end
     Wait(10)
     local entity = GetClosestObjectOfType(position.x, position.y, position.z, range, GetHashKey(modelName), false, false, false)
     Wait(10)
@@ -78,12 +78,15 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteObject", function (modelNa
     end
 end)
 RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function (modelName, position, complete)
-    print("Searching for  ", modelName, "...")
     local entity = ConsistentGetClosestObject(position, modelName, 10.0)
-    if entity~=0 and entity~=nil then
+    while entity~=0 and entity~=nil do
         ConsistentDeleteObject(modelName, entity)
+        Wait(10)
+        entity = ConsistentGetClosestObject(position, modelName, 10.0)
     end
-    complete()
+    if complete then
+        complete()
+    end
 end)
 
 
