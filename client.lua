@@ -16,9 +16,15 @@ function ConsistentGetClosestObject(position, modelName, range, range2, iteratio
         Wait(10)
         return ConsistentGetClosestObject(position, modelName, range2, nil, (iteration+1), timesFound)
     else --found it
-        timesFound+=1
-        if timesFound>=1 then return entity
-        else return ConsistentGetClosestObject(position, modelName, range2, nil, iteration+1, timesFound) end
+        local distance = (vector3(position.x, position.y, position.z)-GetEntityCoords(entity))
+        if (distance.x == 0 and distance.y==0) or range>=3.0 then
+            timesFound+=1
+            if timesFound>=1 then return entity
+            else return ConsistentGetClosestObject(position, modelName, range2, nil, iteration+1, timesFound) end
+        else
+            Wait(10)
+            return ConsistentGetClosestObject(position, modelName, range2, nil, (iteration+1), timesFound)
+        end
     end
 end
 function ConsistentDeleteObject(modelName, entity, iteration)
@@ -40,9 +46,13 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
     if entity == 0 or entity==nil then
         TriggerServerEvent("jack-objectspawner_lib:server:createObject", tonumber(sourceCreator), modelName, position)
         --Wait until object is created
-        local timeToWait=2*1000
+        local timeToWait=4*1000
+        local range = 0.2
+        local rangeIncrease=0.5
+        local numberIncreases=0
         while timeToWait>0 and (entity==0 or entity==nil) do
-            entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
+            entity = ConsistentGetClosestObject(position, modelName,range+rangeIncrease*numberIncreases)
+            numberIncreases+=1
             timeToWait-=100
             Wait(100)
         end
@@ -87,9 +97,13 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotati
         --if entity doesnt exist ask dedicated host to create it
         TriggerServerEvent("jack-objectspawner_lib:server:createObjectWithRotation", tonumber(sourceCreator), modelName, position, rotation)
         --Wait until object is created
-        local timeToWait=2*1000
+        local timeToWait=4*1000
+        local range = 0.2
+        local rangeIncrease=0.5
+        local numberIncreases=0
         while timeToWait>0 and (entity==0 or entity==nil) do
-            entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
+            entity = ConsistentGetClosestObject(position, modelName,range+rangeIncrease*numberIncreases)
+            numberIncreases+=1
             timeToWait-=100
             Wait(100)
         end
@@ -118,7 +132,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotati
             end
         end
     else
-        print("(Rot) RegisterExisting ", modelName)
+        print("(Rot) RegisterExisting ", modelName, "Entity: ", entity)
         if completeFunc then
             completeFunc(entity)
         end
