@@ -29,8 +29,11 @@ function ConsistentGetClosestObject(position, modelName, range, range2, iteratio
 end
 function ConsistentDeleteObject(modelName, entity, iteration)
     if not iteration then iteration = 0 end
-    if iteration>=3 then warn("Couldnt delete ", modelName) return nil end --tried 3 times didnt work, give up
+    if iteration>=3 then warn("Couldnt delete ", modelName) return false end --tried 3 times didnt work, give up
+    NetworkRequestControlOfEntity(entity)
+    Wait(10)
     SetEntityAsMissionEntity(entity, false, false)
+    Wait(10)
     DeleteObject(entity)
     Wait(50) --Wait for delete to process
     if DoesEntityExist(entity) and entity~=0 and entity~=nil then --Still exists? try again
@@ -38,9 +41,40 @@ function ConsistentDeleteObject(modelName, entity, iteration)
         ConsistentDeleteObject(modelName, entity, iteration+1)
     else
         print(GetPlayerServerId(PlayerId()), " deleted ", modelName)
+        return true
     end
 end
-
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCreate", function (modelName, position, completeFunc) -- createIfCantFind
+    local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
+    if entity == 0 or entity==nil then
+        local timeToWait=4*1000
+        local range = 0.2
+        local rangeIncrease=0.5
+        local numberIncreases=0
+        while timeToWait>0 and (entity==0 or entity==nil) do
+            entity = ConsistentGetClosestObject(position, modelName,range+rangeIncrease*numberIncreases)
+            numberIncreases+=1
+            timeToWait-=100
+            Wait(100)
+        end
+        --out of time or we know the entity now
+        if entity~=0 and entity~=nil then
+            if completeFunc then
+                completeFunc(entity)
+            end
+        else
+            warn("Could not find ", modelName, " after waiting\n")
+            if completeFunc then
+                completeFunc(nil)
+            end
+        end
+    else
+        print("RegisterExisting (no create)", modelName, " entity: ", entity)
+        if completeFunc then
+            completeFunc(entity)
+        end
+    end
+end)
 RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (sourceCreator, modelName, position, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if entity == 0 or entity==nil then
@@ -164,7 +198,7 @@ end)
 RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function (modelName, position, complete)
     local entity = ConsistentGetClosestObject(position, modelName, 10.0)
     while entity~=0 and entity~=nil do
-        ConsistentDeleteObject(modelName, entity)
+        if not ConsistentDeleteObject(modelName, entity) then break end
         Wait(10)
         entity = ConsistentGetClosestObject(position, modelName, 10.0)
     end
@@ -249,11 +283,11 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObjectWithRotation", funct
 end)
 
 RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName, model, pos, lock)
-    local entity = ConsistentGetClosestObject(pos, model, 0.2, 1.5)
+    local entity = ConsistentGetClosestObject(pos, model, 0.2, 3.0)
     Wait(1)
     if not IsDoorRegisteredWithSystem(doorName) then
-        print("Add door " .. doorName .." to system")
-        if entity~=0 then
+        if entity~=0 and entity~=nil then
+            print("Add door " .. doorName .." to system")
             local exactCoords = GetEntityCoords(entity)
             AddDoorToSystem(doorName, GetHashKey(model), exactCoords.x, exactCoords.y, exactCoords.z, false, false, false)
         else
@@ -267,6 +301,9 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorState", function(doorName
     if not lock then
         print("unfreeeze ", entity)
         FreezeEntityPosition(entity, false)
+    else
+        print("freeze ", entity)
+        FreezeEntityPosition(entity, true)
     end
 end)
 
