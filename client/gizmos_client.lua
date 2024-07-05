@@ -32,7 +32,7 @@ exports('useGizmo', function(handle)
             action = 'setCameraPosition',
             data = {
                 position = GetFinalRenderedCamCoord(),
-                rotation = GetFinalRenderedCamRot()
+                rotation = GetFinalRenderedCamRot(2)
             }
         })
         Wait(0)
@@ -52,8 +52,8 @@ RegisterNUICallback('moveEntity', function(data, cb)
     local position = data.position
     local rotation = data.rotation
 
-    SetEntityCoords(entity, position.x, position.y, position.z)
-    SetEntityRotation(entity, rotation.x, rotation.y, rotation.z)
+    SetEntityCoords(entity, position.x, position.y, position.z, false, false, false, false)
+    SetEntityRotation(entity, rotation.x, rotation.y, rotation.z, 2, false)
     cb('ok')
 end)
 

@@ -4,26 +4,25 @@ game 'gta5'
 
 author 'JACK'
 
-description 'AI Library'
+description 'Object spawner'
 
 version '0.1'
 
 lua54 'yes'
 
-
-
+--Entity view is from https://github.com/qbcore-framework/qb-adminmenu (GPL 3.0) Modifications made
+--Gizmos is from https://github.com/Demigod916/object_gizmo (GPL 3.0) Modifications made
 client_scripts{
-	'client.lua',
-	'gizmos_client.lua',
+	'client/**/*.lua',
 }
 
 server_scripts{
-	'server.lua'
+	'server/**/*.lua',
 }
 
 shared_scripts {
+	'@ox_lib/init.lua',
 	'config.lua',
-	'@ox_lib/init.lua'
  }
 
 
