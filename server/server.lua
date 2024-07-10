@@ -66,7 +66,7 @@ lib.callback.register("jack-objectspawner_lib:server:createObject", function(sou
                 Wait(1)
             end
             local createdObjectNetID = NetworkGetNetworkIdFromEntity(newEntity)
-            print("Created "..modelName.." with netID: ", createdObjectNetID, " at ", position)
+            print("Created "..modelName.." with netID: ", createdObjectNetID)
             alreadyCreated[key] = createdObjectNetID
             creatingQueue[key]=nil
         end

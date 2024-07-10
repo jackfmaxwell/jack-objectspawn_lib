@@ -63,7 +63,7 @@ function ConsistentGetClosestObject(position, modelName, range, range2, iteratio
     if not iteration then iteration = 0 end
     if not timesFound then timesFound = 0 end
     if not range2 then range2=range end
-    if iteration>=3 then  print("Didnt find " .. modelName) return nil end
+    if iteration>=3 then return nil end
     local entity = GetClosestObjectOfType(position.x, position.y, position.z, range, GetHashKey(modelName), false, false, false)
     Wait(10) --let GetClosestObjectOfType return
     if entity==0 then --didnt find anything. wait some time and then try again
@@ -73,7 +73,6 @@ function ConsistentGetClosestObject(position, modelName, range, range2, iteratio
         local distance = (vector3(position.x, position.y, position.z)-GetEntityCoords(entity))
         if (distance.x == 0 and distance.y==0) or range>=3.0 then
             timesFound+=1
-            print("Found " .. modelName .. " entity: ".. entity)
             if timesFound>=1 then return entity
             else return ConsistentGetClosestObject(position, modelName, range2, nil, iteration+1, timesFound) end
         else
@@ -90,10 +89,8 @@ function ConsistentDeleteObject(modelName, entity, iteration)
     DeleteObject(entity)
     Wait(50) --Wait for delete to process
     if DoesEntityExist(entity) and EntityIDExists(entity) and GetEntityModel(entity)==GetHashKey(modelName) then --Still exists? try again
-        print("Deleted ", modelName, " but still exists")
         ConsistentDeleteObject(modelName, entity, iteration+1)
     else
-        print(GetPlayerServerId(PlayerId()), " deleted ", modelName)
         return true
     end
 end
@@ -113,18 +110,18 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCrea
         end
         --out of time or we know the entity now
         if EntityIDExists(entity) then
-            print("Found ", modelName, " after waiting\n")
+            print("Found ", modelName, " after waiting")
             if completeFunc then
                 completeFunc(entity)
             end
         else
-            warn("Could not find ", modelName, " after waiting\n")
+            warn("Could not find ", modelName, " after waiting")
             if completeFunc then
                 completeFunc(nil)
             end
         end
     else
-        print("RegisterExisting (no create)", modelName, " entity: ", entity)
+        print("Found ", modelName)
         if completeFunc then
             completeFunc(entity)
         end
@@ -134,9 +131,9 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if entity == 0 or entity==nil then
         --Ask server to create
-        print("Ask server to create "..modelName)
+        print("Ask server to create "..modelName,"...")
         lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
-            print(modelName, " returned from server ", netID)
+            print("Server creates " ,modelName,", ", netID)
             local timeout = 4*1000
             while (NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0) and timeout>0 do
                 Wait(1000)
@@ -155,13 +152,11 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
                 SetEntityHeading(entity, position.w)
             end
             FreezeEntityPosition(entity, true)
-            print("Server created ", modelName, " netID: ", netID)
             if completeFunc then
                 completeFunc(entity)
             end
         end, modelName, position)
     else
-        print("RegisterExisting ", modelName, " entity: ", entity)
         if completeFunc then
             completeFunc(entity)
         end
@@ -192,9 +187,9 @@ end)
 RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", function (sourceCreator, modelName, position, rotation, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if entity == 0 or entity==nil then
-        print("Ask server to create "..modelName)
+        print("Ask server to create "..modelName, "...")
         lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
-            print(modelName, " returned from server ", netID)
+            print("Server created " ,modelName,", ", netID)
             local timeout = 4*1000
             while (NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0) and timeout>0 do
                 Wait(1000)
@@ -220,13 +215,11 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotati
             TriggerServerEvent("jack-objectspawner_lib:server:setEntityRotationRPC", netID, position.w, rotation)
 
             FreezeEntityPosition(entity, true)
-            print("Server created ", modelName)
             if completeFunc then
                 completeFunc(entity)
             end
         end, modelName, position)
     else
-        print("(Rot) RegisterExisting ", modelName, "Entity: ", entity)
         NetworkRegisterEntityAsNetworked(entity)
         if completeFunc then
             completeFunc(entity)
@@ -256,19 +249,18 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function 
     local breakLoop = false
     local numberAttemptsLeft = 3
     if not EntityIDExists(entity) then
-        warn("Didnt find ".. modelName.. " when trying to delete all\n")
     end
     while EntityIDExists(entity) and not breakLoop and numberAttemptsLeft>0 do
         local tryLocal = false
         if NetworkGetEntityIsNetworked(entity) then
             local netID = NetworkGetNetworkIdFromEntity(entity)
-            print(modelName , " netID: ", netID)
             if NetworkDoesEntityExistWithNetworkId(netID) then
                 if dedicatedHost then
                     lib.callback("jack-objectspawner_lib:server:deleteObject", false, function(result)
                         if not result then NetworkUnregisterNetworkedEntity(entity) numberAttemptsLeft-=1
                         else
                             Wait(50)
+                            print("Server deleted ", modelName, " netID:", netID)
                             entity = ConsistentGetClosestObject(position, modelName, 40.0)
                         end
                     end, netID, modelName)
@@ -280,8 +272,8 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function 
         else tryLocal=true end
         if tryLocal then
             numberAttemptsLeft=3
-            print("trying local delete on ", modelName)
-            if not ConsistentDeleteObject(modelName, entity) then breakLoop=true end
+            if not ConsistentDeleteObject(modelName, entity) then breakLoop=true
+            else print("Local deleted ", modelName) end
             Wait(10)
             entity = ConsistentGetClosestObject(position, modelName, 40.0)
         end
@@ -291,6 +283,17 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function 
         print("Deleted all ".. modelName.. " props\n")
     else
         warn("Failed to delete  ".. modelName.. " breakLoop: "..(breakLoop and "true" or "false") .. " numberAttemptsLeft: "..numberAttemptsLeft .. "\n")
+        if numberAttemptsLeft<=0 then
+            entity = ConsistentGetClosestObject(position, modelName, 40.0)
+            while DoesEntityExist(entity) do
+                NetworkUnregisterNetworkedEntity(entity)
+                if not ConsistentDeleteObject(modelName, entity) then break
+                else print("Backup Local deleted ", modelName) end
+                entity = ConsistentGetClosestObject(position, modelName, 40.0)
+            end
+            print("done local deleting")
+         
+        end
     end
     if complete then
         complete()
@@ -302,15 +305,16 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelNam
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if not EntityIDExists(entity) then
         lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
-            print(modelName, " returned from server ", netID)
+            print("Server creates " ,modelName,", ", netID)
             while NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0 do
-                Wait(1)
+                Wait(100)
             end
             local entity = NetworkGetEntityFromNetworkId(netID)
             NetworkRequestControlOfEntity(entity)
             while not NetworkHasControlOfEntity(entity) do
                 Wait(1)
             end
+            print("Initialize ", modelName)
             SetEntityAsMissionEntity(entity, true, true)
             SetNetworkIdExistsOnAllMachines(netID, true)
             SetNetworkIdCanMigrate(netID, true)
@@ -318,8 +322,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelNam
 
             TriggerServerEvent("jack-objectspawner_lib:server:setEntityRotationRPC", netID, position.w, nil)
             FreezeEntityPosition(entity, true)
-            
-            print("Server created ", modelName)
+
             if completeFunc then
                 completeFunc(entity)
             end
@@ -337,7 +340,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObjectWithRotation", funct
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if not EntityIDExists(entity) then
         lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
-            print(modelName, " returned from server ", netID)
+            print("Server creates " ,modelName,", ", netID)
             while NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0 do
                 Wait(1)
             end
@@ -346,6 +349,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObjectWithRotation", funct
             while not NetworkHasControlOfEntity(entity) do
                 Wait(1)
             end
+            print("Initialize ", modelName)
             SetEntityAsMissionEntity(entity, true, true)
             SetNetworkIdExistsOnAllMachines(netID, true)
             SetNetworkIdCanMigrate(netID, true)
@@ -354,7 +358,6 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObjectWithRotation", funct
             TriggerServerEvent("jack-objectspawner_lib:server:setEntityRotationRPC", netID, position.w, rotation)
 
             FreezeEntityPosition(entity, true)
-            print("Server created ", modelName)
             if completeFunc then
                 completeFunc(entity)
             end
@@ -384,10 +387,12 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorStateRPC", function(doorN
                 TriggerEvent("jack-objectspawner_lib:client:deleteObject", model, pos)
             end
         end
-
     end
     Wait(1)
     print("Set door " .. doorName .. " state: " , lock and "4" or "3")
+    if not lock and modelName=="v_ilev_gb_teldr" then
+        TriggerEvent("jack-objectspawner_lib:client:deleteObject", model, pos)
+    end
     DoorSystemSetDoorState(doorName, lock and 4 or 3, false, true)
 end)
 
