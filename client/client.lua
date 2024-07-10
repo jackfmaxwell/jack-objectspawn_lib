@@ -27,6 +27,38 @@ function EntityIDExists(id)
     else return false end
 end
 
+function SerializeTable(tbl, indent, visited)
+    visited = visited or {}
+    indent = indent or 0
+    local result = {}
+    local padding = string.rep("  ", indent)
+
+    if visited[tbl] then
+        return "<circular reference>"
+    end
+    visited[tbl] = true
+
+    table.insert(result, "{\n")
+
+    for key, value in pairs(tbl) do
+        local formattedKey = (type(key) == "string" and string.format("%q", key)) or (tostring(key))
+        local formattedValue
+
+        if type(value) == "table" then
+            formattedValue = SerializeTable(value, indent + 1, visited)
+        elseif type(value) == "string" then
+            formattedValue = string.format("%q", value)
+        else
+            formattedValue = tostring(value)
+        end
+
+        table.insert(result, padding .. "  [" .. formattedKey .. "] = " .. formattedValue .. ",\n")
+    end
+
+    table.insert(result, padding .. "}")
+    return table.concat(result)
+end
+
 function ConsistentGetClosestObject(position, modelName, range, range2, iteration, timesFound)
     if not iteration then iteration = 0 end
     if not timesFound then timesFound = 0 end
@@ -57,7 +89,7 @@ function ConsistentDeleteObject(modelName, entity, iteration)
     Wait(10)
     DeleteObject(entity)
     Wait(50) --Wait for delete to process
-    if DoesEntityExist(entity) and EntityIDExists(entity) and GetEntityModel(entity)==modelName then --Still exists? try again
+    if DoesEntityExist(entity) and EntityIDExists(entity) and GetEntityModel(entity)==GetHashKey(modelName) then --Still exists? try again
         print("Deleted ", modelName, " but still exists")
         ConsistentDeleteObject(modelName, entity, iteration+1)
     else
@@ -229,7 +261,8 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function 
     while EntityIDExists(entity) and not breakLoop and numberAttemptsLeft>0 do
         local tryLocal = false
         if NetworkGetEntityIsNetworked(entity) then
-            local netID =       (entity)
+            local netID = NetworkGetNetworkIdFromEntity(entity)
+            print(modelName , " netID: ", netID)
             if NetworkDoesEntityExistWithNetworkId(netID) then
                 if dedicatedHost then
                     lib.callback("jack-objectspawner_lib:server:deleteObject", false, function(result)
@@ -359,7 +392,6 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorStateRPC", function(doorN
 end)
 
 
--- object placing view for deving?
 RegisterCommand('testPlaceObject',function(source, args, rawCommand)
     local objectName = args[1] or "prop_bench_01a"
     local playerPed = PlayerPedId()
@@ -369,9 +401,24 @@ RegisterCommand('testPlaceObject',function(source, args, rawCommand)
     lib.requestModel(model, 5000)
 
     local object = CreateObject(model, offset.x, offset.y, offset.z, false, false, false)
-
-    local objectPositionData = exports["jack-objectspawn_lib"]:useGizmo(object) --export for the gizmo. just pass an object handle to the function.
     
-    print(json.encode(objectPositionData, { indent = true }))
+    local objectPositionData = exports["jack-objectspawn_lib"]:useGizmo(object) --export for the gizmo. just pass an object handle to the function.
+    local positionandrotation = {}
+    positionandrotation["position"] = vector3(objectPositionData["position"].x, objectPositionData["position"].y, objectPositionData["position"].z)
+    positionandrotation["rotation"] = vector3(objectPositionData["rotation"].x, objectPositionData["rotation"].y, objectPositionData["rotation"].z)
+    if positionandrotation["rotation"].x ==0 and positionandrotation["rotation"].y ==0 then
+        positionandrotation["rotiation"] = nil
+        positionandrotation["position"] = vector4(positionandrotation["position"].x, positionandrotation["position"].y, positionandrotation["position"].z, objectPositionData["rotation"].z)
+    end
+    lib.setClipboard(SerializeTable(positionandrotation))
+    
+    lib.notify({
+      title="Copied data to clipboard!",
+      description="Paste in correct place in config to save",
+      type='success',
+      showDuration=false,
+    })
+
+    print(json.encode(positionandrotation, { indent = true }))
     DeleteEntity(objectPositionData.handle)
 end, false)
