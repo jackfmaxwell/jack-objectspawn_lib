@@ -2,6 +2,8 @@
 
 This is an object spawner library meant to be used by your scripts during runtime as a way to have more consistent object creation, deletion, and existence. 
 
+Note this also contains my entity view tool for bank script and a UI for bank config creation (wip). Please remove if unneeded
+
 ![image](https://github.com/jackfmaxwell/jack-objectspawn_lib/assets/34254615/e99165d5-4b74-4383-b00c-acfcccf458bb)
 
 #### 
