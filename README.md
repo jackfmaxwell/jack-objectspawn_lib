@@ -17,19 +17,19 @@ Description:
 Finds an existing entity with modelName at position. If the entity is not found then ask server to create it, then return that created entity.
 
 Example Use:
-    TriggerEvent("jack-objectspawner_lib:client:registerExistingObject", dedicatedHostNetID, Config.Banks[CurrentBank]["objects"]["vaultDoor"]["model"], vaultPos, function(vault)
-              local openRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["openHeading"]
-              local closeRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["closeHeading"]
-              if setLocked then
-                  warn("SET VAULT LOCKED\n\n")
-                  TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading", NetworkGetNetworkIdFromEntity(vault), closeRotation)
-                  SetEntityHeading(vault, closeRotation)
-              else
-                  warn("SET VAULT OPEN\n\n")
-                  TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading",  NetworkGetNetworkIdFromEntity(vault), openRotation)
-                  SetEntityHeading(vault, openRotation)
-              end
-          end)
+        TriggerEvent("jack-objectspawner_lib:client:registerExistingObject", dedicatedHostNetID, Config.Banks[CurrentBank]["objects"]["vaultDoor"]["model"], vaultPos, function(vault)
+                  local openRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["openHeading"]
+                  local closeRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["closeHeading"]
+                  if setLocked then
+                      warn("SET VAULT LOCKED\n\n")
+                      TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading", NetworkGetNetworkIdFromEntity(vault), closeRotation)
+                      SetEntityHeading(vault, closeRotation)
+                  else
+                      warn("SET VAULT OPEN\n\n")
+                      TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading",  NetworkGetNetworkIdFromEntity(vault), openRotation)
+                      SetEntityHeading(vault, openRotation)
+                  end
+              end)
 
 #### Register Existing Object Do Not Create
 "jack-objectspawner_lib:client:registerExistingObject_DoNotCreate" 
