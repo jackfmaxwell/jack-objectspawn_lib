@@ -10,6 +10,11 @@ Entity view is modified from https://github.com/qbcore-framework/qb-adminmenu (G
 
 Gizmos is modified from https://github.com/Demigod916/object_gizmo (GPL 3.0)
 
+
+Checkout my tebex store:
+https://jack-scripts.tebex.io/
+
+
 ***
 
 ### No Dependencies (in runtime)
@@ -194,10 +199,3 @@ Save to clipboard
 #### IDLE
 ![image](https://github.com/jackfmaxwell/jack-objectspawn_lib/assets/34254615/5fce9626-2392-42e5-bce3-cfb371ae9b56)
 #### ACTIVE (Only active while script is creating objects and initializing zones
-
-
-Checkout my tebex store:
-
-https://jack-scripts.tebex.io/
-
-
