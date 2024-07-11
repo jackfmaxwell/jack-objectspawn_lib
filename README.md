@@ -4,6 +4,12 @@ This is an object spawner library meant to be used by your scripts during runtim
 
 ![image](https://github.com/jackfmaxwell/jack-objectspawn_lib/assets/34254615/e99165d5-4b74-4383-b00c-acfcccf458bb)
 
+#### 
+
+Entity view is modified from https://github.com/qbcore-framework/qb-adminmenu (GPL 3.0)
+
+Gizmos is modified from https://github.com/Demigod916/object_gizmo (GPL 3.0)
+
 ***
 
 ### No Dependencies (in runtime)
