@@ -127,7 +127,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCrea
         end
     end
 end)
-RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (sourceCreator, modelName, position, completeFunc) -- createIfCantFind
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if entity == 0 or entity==nil then
         --Ask server to create
@@ -184,7 +184,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:setEntityRotation", function(ent
     end
 end)
 --this one works to set rotation for everyone.
-RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", function (sourceCreator, modelName, position, rotation, completeFunc) -- createIfCantFind
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", function (modelName, position, rotation, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if entity == 0 or entity==nil then
         print("Ask server to create "..modelName, "...")
@@ -198,7 +198,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotati
             if (NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0) then
                 lib.callback("jack-objectspawner_lib:server:deleteObject", false, function(result)
                     if not result then warn("Server failed to delete  ".. modelName.. "")
-                    else return TriggerEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", sourceCreator, modelName, position, rotation, completeFunc) end
+                    else return TriggerEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", modelName, position, rotation, completeFunc) end
                 end, netID, modelName)
             end
             print(NetworkGetEntityFromNetworkId(netID) , " from ", netID, " for ", modelName)
@@ -244,6 +244,14 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteObject", function (modelNa
         end
     end
 end)
+lib.callback.register("jack-objectspawner_lib:client:doesEntityExist", function(entityNetID)
+    if not EntityIDExists(entityNetID) then return false end -- just checks if id is nil or 0
+    if not NetworkDoesEntityExistWithNetworkId(entityNetID) then return false end
+    local entity = NetworkGetEntityFromNetworkId(entityNetID)
+    Wait(1)
+    if not EntityIDExists(entity) then return false end
+    return true
+end)
 RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function (dedicatedHost, modelName, position, complete)
     local entity = ConsistentGetClosestObject(position, modelName, 40.0)
     local breakLoop = false
@@ -266,6 +274,20 @@ RegisterNetEvent("jack-objectspawner_lib:client:deleteAllPropsInArea", function 
                     end, netID, modelName)
                 else
                     warn("not dedicated host, dont delete networked object ", modelName,"\n")
+                    --ask dedicated host if this entity is visible for them
+                    --if entity is not known to them, then we should delete it
+                    lib.callback("jack-objectspawner_lib:server:doesDedicatdHostKnowEntity", false, function(result)
+                        if not result then
+                            entity = ConsistentGetClosestObject(position, modelName, 40.0)
+                            while DoesEntityExist(entity) do
+                                NetworkUnregisterNetworkedEntity(entity)
+                                if not ConsistentDeleteObject(modelName, entity) then break
+                                else print("Backup Local deleted ", modelName) end
+                                entity = ConsistentGetClosestObject(position, modelName, 40.0)
+                            end
+                            print("done local deleting")
+                        end
+                    end, dedicatedHost, netID)
                     break
                 end
             else tryLocal=true end

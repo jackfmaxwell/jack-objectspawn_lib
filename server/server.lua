@@ -15,26 +15,20 @@ function IndexOf(tbl, value)
     return nil
 end
 
-RegisterNetEvent("jack-objectspawner_lib:server:createObjectWithRotation", function(targetNetID, modelName, position, rotation)
-    print("Create w rot", modelName)
-    TriggerClientEvent("jack-objectspawner_lib:client:createObjectWithRotation", tonumber(targetNetID), modelName, position, rotation)
-end)
-
-RegisterNetEvent("jack-objectspawner_lib:server:createObject", function(targetNetID, modelName, position)
-    print("Create ", modelName)
-    --entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true) HERE?
-    TriggerClientEvent("jack-objectspawner_lib:client:createObject", tonumber(targetNetID), modelName, position)
-end)
-
 RegisterNetEvent("jack-objectspawner_lib:server:setEntityRotationRPC", function (entityNetID, heading, rotation)
     TriggerClientEvent("jack-objectspawner_lib:client:setEntityRotation", -1, entityNetID, heading, rotation)
+end)
+
+lib.callback.register("jack-objectspawner_lib:server:doesDedicatdHostKnowEntity", function(source, dedicatedHost, entityNetID)
+    local result = lib.callback.await("jack-objectspawner_lib:client:doesEntityExist", dedicatedHost, entityNetID)
+    return result
 end)
 
 --create queue, and already created
 local alreadyCreated = {}
 local creatingQueue = {}
 
-lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(source, entityNetID, modelName) --sometimes bankName is string sometimes its cb
+lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(source, entityNetID, modelName)
     if entityNetID==nil or entityNetID==0 then print("object doesnt have netid") return false end
     local entity = NetworkGetEntityFromNetworkId(entityNetID)
     if entity~=nil and entity~=0 then
@@ -52,7 +46,7 @@ lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(sou
     end
 end)
 
-lib.callback.register("jack-objectspawner_lib:server:createObject", function(source, modelName, position) --sometimes bankName is string sometimes its cb
+lib.callback.register("jack-objectspawner_lib:server:createObject", function(source, modelName, position)
     local key = modelName..position.x..position.y..position.z
     if alreadyCreated[key]~=nil then
         print("already created ", modelName)
