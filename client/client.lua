@@ -228,6 +228,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotati
 end)
 
 RegisterNetEvent("jack-objectspawner_lib:client:deleteObject", function (modelName, position)
+    print("try delete")
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if EntityIDExists(entity) then
         local tryLocal = false
@@ -411,11 +412,36 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorStateRPC", function(doorN
         end
     end
     Wait(1)
-    print("Set door " .. doorName .. " state: " , lock and "4" or "3")
-    if not lock and modelName=="v_ilev_gb_teldr" then
+    DoorSystemSetDoorState(doorName, (lock and 1 or 0), false, false)
+    while lock and not IsDoorClosed(doorName) do Wait(1) end
+    if not lock and model=="v_ilev_gb_teldr" then --not proper door object
         TriggerEvent("jack-objectspawner_lib:client:deleteObject", model, pos)
     end
-    DoorSystemSetDoorState(doorName, lock and 4 or 3, false, true)
+    print("Set door " .. doorName .. " "..model .. " state: " , lock and "1" or "0")
+end)
+
+RegisterNetEvent("jack-objectspawner_lib:client:unlockIfHealthDrops", function(doorName, model, pos)
+    local entity = ConsistentGetClosestObject(pos, model, 0.2, 3.0)
+    Wait(1)
+    if not IsDoorRegisteredWithSystem(doorName) then
+        if EntityIDExists(entity) then
+            print("Add door " .. doorName .." to system")
+            local exactCoords = GetEntityCoords(entity)
+            AddDoorToSystem(doorName, GetHashKey(model), exactCoords.x, exactCoords.y, exactCoords.z, false, false, false)
+        else
+            warn("Could not find door ", doorName, " near position: ", pos)
+        end
+    end
+    CreateThread(function()
+        SetEntityHealth(entity, GetEntityMaxHealth(entity))
+        while true do
+            Wait(5000)
+            if GetEntityHealth(entity)<1000 then
+                TriggerServerEvent("jack-objectspawner_lib:server:setDoorState", doorName, model, pos, false)
+                break
+            end
+        end
+    end)
 end)
 
 
