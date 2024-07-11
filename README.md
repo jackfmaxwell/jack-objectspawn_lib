@@ -17,19 +17,19 @@ Description:
 Finds an existing entity with modelName at position. If the entity is not found then ask server to create it, then return that created entity.
 
 Example Use:
-  TriggerEvent("jack-objectspawner_lib:client:registerExistingObject", dedicatedHostNetID, Config.Banks[CurrentBank]["objects"]["vaultDoor"]["model"], vaultPos, function(vault)
-            local openRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["openHeading"]
-            local closeRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["closeHeading"]
-            if setLocked then
-                warn("SET VAULT LOCKED\n\n")
-                TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading", NetworkGetNetworkIdFromEntity(vault), closeRotation)
-                SetEntityHeading(vault, closeRotation)
-            else
-                warn("SET VAULT OPEN\n\n")
-                TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading",  NetworkGetNetworkIdFromEntity(vault), openRotation)
-                SetEntityHeading(vault, openRotation)
-            end
-        end)
+    TriggerEvent("jack-objectspawner_lib:client:registerExistingObject", dedicatedHostNetID, Config.Banks[CurrentBank]["objects"]["vaultDoor"]["model"], vaultPos, function(vault)
+              local openRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["openHeading"]
+              local closeRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["closeHeading"]
+              if setLocked then
+                  warn("SET VAULT LOCKED\n\n")
+                  TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading", NetworkGetNetworkIdFromEntity(vault), closeRotation)
+                  SetEntityHeading(vault, closeRotation)
+              else
+                  warn("SET VAULT OPEN\n\n")
+                  TriggerServerEvent("jack-bankrobbery:server:setVaultDoorHeading",  NetworkGetNetworkIdFromEntity(vault), openRotation)
+                  SetEntityHeading(vault, openRotation)
+              end
+          end)
 
 #### Register Existing Object Do Not Create
 "jack-objectspawner_lib:client:registerExistingObject_DoNotCreate" 
@@ -40,28 +40,28 @@ Finds the entity with modelName at position and calls completeFunc(entity) when 
 
 Example Use:
 
-  TriggerEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCreate", model, pos, function(innerGate)
-    local id = exports.ox_target:addSphereZone({
-                  coords = pos,
-                  radius = 0.5,
-                  debug = Config.DebugPoly,
-                  options = {
-                      {
-                          items="thermite",
-                          name="plantExposiveinnerGate"..CurrentBank,
-                          canInteract = function()
-                              return true
-                          end,
-                          onSelect = function ()
-                              --implementation
-                          end,
-                          icon="fa-solid fa-vault",
-                          label="Plant explosive",
-                      }
-                  
-                  }
-              })
-  end)
+    TriggerEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCreate", model, pos, function(innerGate)
+      local id = exports.ox_target:addSphereZone({
+                    coords = pos,
+                    radius = 0.5,
+                    debug = Config.DebugPoly,
+                    options = {
+                        {
+                            items="thermite",
+                            name="plantExposiveinnerGate"..CurrentBank,
+                            canInteract = function()
+                                return true
+                            end,
+                            onSelect = function ()
+                                --implementation
+                            end,
+                            icon="fa-solid fa-vault",
+                            label="Plant explosive",
+                        }
+                    
+                    }
+                })
+    end)
   
 
 
