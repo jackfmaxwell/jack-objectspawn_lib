@@ -196,3 +196,8 @@ Save to clipboard
 #### ACTIVE (Only active while script is creating objects and initializing zones
 
 
+Checkout my tebex store:
+
+https://jack-scripts.tebex.io/
+
+
