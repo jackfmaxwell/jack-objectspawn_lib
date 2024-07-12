@@ -82,6 +82,7 @@ export const TransformComponent = () => {
             object={mesh}
             mode={editorMode}
             onObjectChange={handleObjectDataUpdate}
+            space="local"
           />
         )}
         <mesh ref={mesh} />
