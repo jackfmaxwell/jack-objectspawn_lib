@@ -106,15 +106,14 @@ end
 RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCreate", function (modelName, position, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)
     if entity == 0 or entity==nil then
-        local timeToWait=4*1000
+        local timeToWait=2*1000
         local range = 0.2
         local rangeIncrease=0.5
         local numberIncreases=0
         while timeToWait>0 and not EntityIDExists(entity) do
             entity = ConsistentGetClosestObject(position, modelName,range+rangeIncrease*numberIncreases)
             numberIncreases+=1
-            timeToWait-=100
-            Wait(100)
+            timeToWait-=250
         end
         --out of time or we know the entity now
         if EntityIDExists(entity) then
@@ -123,7 +122,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject_DoNotCrea
                 completeFunc(entity)
             end
         else
-            warn("Could not find ", modelName, " after waiting")
+            warn("\nCould not find ", modelName, " after waiting\n")
             if completeFunc then
                 completeFunc(nil)
             end
@@ -148,10 +147,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
                 timeout-=1000
             end
             local entity = NetworkGetEntityFromNetworkId(netID)
-            NetworkRequestControlOfEntity(entity)
-            while not NetworkHasControlOfEntity(entity) do
-                Wait(1)
-            end
+
             SetEntityAsMissionEntity(entity, true, true)
             SetNetworkIdExistsOnAllMachines(netID, true)
             SetNetworkIdCanMigrate(netID, true)
@@ -212,9 +208,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotati
             --print(NetworkGetEntityFromNetworkId(netID) , " from ", netID, " for ", modelName)
             local entity = NetworkGetEntityFromNetworkId(netID)
             NetworkRequestControlOfEntity(entity)
-            while not NetworkHasControlOfEntity(entity) do
-                Wait(1)
-            end
+
             SetEntityAsMissionEntity(entity, true, true)
             SetNetworkIdExistsOnAllMachines(netID, true)
             SetNetworkIdCanMigrate(netID, true)
@@ -339,18 +333,18 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelNam
     if not EntityIDExists(entity) then
         lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
             print("Server creates " ,modelName,", ", netID)
-            while NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0 do
-                Wait(100)
+            local timer = 1*1000
+            while NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0 and timer>0 do
+                Wait(250)
+                timer-=250
             end
             local entity = NetworkGetEntityFromNetworkId(netID)
             NetworkRequestControlOfEntity(entity)
-            while not NetworkHasControlOfEntity(entity) do
-                Wait(1)
-            end
+
             --print("Initialize ", modelName)
             SetEntityAsMissionEntity(entity, true, true)
-            SetNetworkIdExistsOnAllMachines(netID, true)
-            SetNetworkIdCanMigrate(netID, true)
+            --SetNetworkIdExistsOnAllMachines(netID, true)
+            --SetNetworkIdCanMigrate(netID, true)
             NetworkSetObjectForceStaticBlend(entity, true)
 
             TriggerServerEvent("jack-objectspawner_lib:server:setEntityRotationRPC", netID, position.w, nil)
@@ -374,14 +368,14 @@ RegisterNetEvent("jack-objectspawner_lib:client:createObjectWithRotation", funct
     if not EntityIDExists(entity) then
         lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
             print("Server creates " ,modelName,", ", netID)
-            while NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0 do
+            local timer = 1000
+            while NetworkGetEntityFromNetworkId(netID) == nil or NetworkGetEntityFromNetworkId(netID) == 0 and timer>0 do
                 Wait(1)
+                timer-=1
             end
             local entity = NetworkGetEntityFromNetworkId(netID)
             NetworkRequestControlOfEntity(entity)
-            while not NetworkHasControlOfEntity(entity) do
-                Wait(1)
-            end
+
            -- print("Initialize ", modelName)
             SetEntityAsMissionEntity(entity, true, true)
             SetNetworkIdExistsOnAllMachines(netID, true)
@@ -426,7 +420,6 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorStateRPC", function(doorN
     DoorSystemSetOpenRatio(doorName, (0.0), true, true)
     local timer = 3000
     while lock and not IsDoorClosed(doorName) and timer>0 do Wait(30) timer-=30 end
-    local timer = 3000
     if not lock and IsModelADoor(model) then
         --FreezeEntityPosition(entity, false)
         TriggerEvent("jack-objectspawner_lib:client:deleteObject", model, pos)
@@ -459,6 +452,51 @@ RegisterNetEvent("jack-objectspawner_lib:client:unlockIfHealthDrops", function(d
 end)
 
 
+
+RegisterCommand('testPlaceObject',function(source, args, rawCommand)
+    local start = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0, 1.0, 0)
+    local offset = vector3(0,0,0)
+    for i=1, 10, 1 do
+        for j=1, 5, 1 do
+            offset = vector3(i*0.25, j*0.25, 0)
+            lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
+                print("received: ", netID)
+            end, "v_ilev_gb_teldr", (start+offset))
+        end
+    end
+    start = (start+offset+vector3(0,0,3))
+    
+    for i=1, 10, 1 do
+        for j=1, 5, 1 do
+            offset = vector3(i*0.25, j*0.25, 0)
+            lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
+                print("received: ", netID)
+            end, "v_ilev_gb_teldr", (start+offset))
+        end
+    end
+    start = (start+offset+vector3(0,0,3))
+    
+    for i=1, 10, 1 do
+        for j=1, 5, 1 do
+            offset = vector3(i*0.25, j*0.25, 0)
+            lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
+                print("received: ", netID)
+            end, "v_ilev_gb_teldr", (start+offset))
+        end
+    end
+    start = (start+offset+vector3(0,0,3))
+
+    for i=1, 10, 1 do
+        for j=1, 5, 1 do
+            offset = vector3(i*0.25, j*0.25, 0)
+            lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
+                print("received: ", netID)
+            end, "v_ilev_gb_teldr", (start+offset))
+        end
+    end
+end, false)
+
+/*
 RegisterCommand('testPlaceObject',function(source, args, rawCommand)
     local objectName = args[1] or "prop_bench_01a"
     local playerPed = PlayerPedId()
@@ -489,3 +527,4 @@ RegisterCommand('testPlaceObject',function(source, args, rawCommand)
     print(json.encode(positionandrotation, { indent = true }))
     DeleteEntity(objectPositionData.handle)
 end, false)
+*/
