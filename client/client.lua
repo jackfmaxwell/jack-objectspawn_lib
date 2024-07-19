@@ -421,10 +421,9 @@ RegisterNetEvent("jack-objectspawner_lib:client:setDoorStateRPC", function(doorN
     local timer = 3000
     while lock and not IsDoorClosed(doorName) and timer>0 do Wait(30) timer-=30 end
     if not lock and IsModelADoor(model) then
-        --FreezeEntityPosition(entity, false)
         TriggerEvent("jack-objectspawner_lib:client:deleteObject", model, pos)
     end
-    --print("Set door " .. doorName .. " "..model .. " state: " , lock and "1" or "0")
+    print("Set door " .. doorName .. " "..model .. " state: " , lock and "1" or "0")
 end)
 
 RegisterNetEvent("jack-objectspawner_lib:client:unlockIfHealthDrops", function(doorName, model, pos)
@@ -452,7 +451,7 @@ RegisterNetEvent("jack-objectspawner_lib:client:unlockIfHealthDrops", function(d
 end)
 
 
-
+/*
 RegisterCommand('testPlaceObject',function(source, args, rawCommand)
     local start = GetOffsetFromEntityInWorldCoords(PlayerPedId(), 0, 1.0, 0)
     local offset = vector3(0,0,0)
@@ -495,10 +494,11 @@ RegisterCommand('testPlaceObject',function(source, args, rawCommand)
         end
     end
 end, false)
+*/
 
-/*
-RegisterCommand('testPlaceObject',function(source, args, rawCommand)
-    local objectName = args[1] or "prop_bench_01a"
+
+RegisterNetEvent("jack-objectspawner_lib:client:testPlaceObject", function(modelName)
+    local objectName = modelName or "prop_bench_01a"
     local playerPed = PlayerPedId()
     local offset = GetOffsetFromEntityInWorldCoords(playerPed, 0, 1.0, 0)
 
@@ -526,5 +526,4 @@ RegisterCommand('testPlaceObject',function(source, args, rawCommand)
 
     print(json.encode(positionandrotation, { indent = true }))
     DeleteEntity(objectPositionData.handle)
-end, false)
-*/
+end)

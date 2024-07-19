@@ -254,7 +254,7 @@ local function DisplayObjectDetails(entity)
         local hit, endCoords, entityHit = RayCastGamePlayCamera(1000.0)
         DrawLine(pos.x, pos.y, pos.z, endCoords.x, endCoords.y, endCoords.z, rayColor.r, rayColor.g, rayColor.b, rayColor.a)
         DrawSphere(endCoords.x, endCoords.y, endCoords.z, 0.05, rayColor.r, rayColor.g, rayColor.b, 0.5)
-        Wait(1)
+        Wait(20)
         if hit and (IsEntityAVehicle(entityHit) or IsEntityAPed(entityHit) or IsEntityAnObject(entityHit)) then
           hitObject = entityHit
           rayColor = { r = 0, g = 255, b = 0, a = 0.7 }

@@ -1,28 +1,3 @@
-function ValueExists(tbl, value)
-    for i = 1, #tbl do
-        if tbl[i][1] == value[1] and tbl[i][2] == value[2] then
-            return true
-        end
-    end
-    return false
-end
-function IsModelADoor(value)
-    for _, model in ipairs(Config.SpawnedDoorModels) do
-        if model == value then
-            return true
-        end
-    end
-    return false
-end
-function IndexOf(tbl, value)
-    for i = 1, #tbl do
-        if tbl[i][1] == value[1] and tbl[i][2] == value[2] then
-            return i
-        end
-    end
-    return nil
-end
-
 RegisterNetEvent("jack-objectspawner_lib:server:setEntityRotationRPC", function (entityNetID, heading, rotation)
     TriggerClientEvent("jack-objectspawner_lib:client:setEntityRotation", -1, entityNetID, heading, rotation)
 end)
@@ -68,7 +43,7 @@ lib.callback.register("jack-objectspawner_lib:server:createObject", function(sou
             creatingQueue[key] = true
             local doorflag = IsModelADoor(modelName)
             print(modelName, " is door? : ", doorflag)
-            local newEntity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, doorflag)
+            local newEntity = CreateObjectNoOffset(GetHashKey(modelName), position.x, position.y, position.z, true, true, doorflag)
             while not DoesEntityExist(newEntity) do
                 Wait(10)
             end
@@ -107,55 +82,4 @@ RegisterNetEvent("jack-objectspawner_lib:server:setDoorState", function(doorName
     --entity = CreateObject(GetHashKey(modelName), position.x, position.y, position.z, true, true, true) HERE?
    -- print("set door state RPC")
     TriggerClientEvent("jack-objectspawner_lib:client:setDoorStateRPC",-1, doorName, model, pos, lock)
-end)
-
-lib.addCommand('bankConfigEditor', {
-    help = 'dev',
-    restricted = 'group.admin'
-}, function(source, args, raw)
-    TriggerClientEvent("jack-objectspawner_lib:client:showObjectRaycast", tonumber(source))
-end)
-
-lib.addCommand('testPrintAllObjects', {
-    help = 'dev',
-    params = {
-        {
-            name = 'deleteprops',
-            type = 'number',
-            help = 'Delete props?',
-        },
-    },
-    restricted = 'group.admin'
-}, function(source, args, raw)
-    print("delete props: ", args.deleteprops)
-    local numberNetObjects = 0
-    for _, entity in ipairs(GetAllObjects()) do
-        local netID = NetworkGetNetworkIdFromEntity(entity)
-        if netID~=0 and netID ~=nil then
-            numberNetObjects+=1
-            if args.deleteprops==1 then
-                DeleteEntity(entity)
-            end
-            print(netID)
-        end
-    end
-    print("Number net objects: ", numberNetObjects)
-
-    local numberNetPeds = 0
-    for _, entity in ipairs(GetAllPeds()) do
-        local netID = NetworkGetNetworkIdFromEntity(entity)
-        if netID~=0 and netID ~=nil then
-            numberNetPeds +=1
-        end
-    end
-    print("Number net peds: ", numberNetPeds)
-
-    local numberNetVehicles = 0
-    for _, entity in ipairs(GetAllVehicles()) do
-        local netID = NetworkGetNetworkIdFromEntity(entity)
-        if netID~=0 and netID ~=nil then
-            numberNetVehicles +=1
-        end
-    end
-    print("Number net vehicles: ", numberNetVehicles)
 end)
