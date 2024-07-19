@@ -40,7 +40,7 @@ Finds an existing entity with modelName at position. If the entity is not found 
 
 **Example Use**:
 
-        TriggerEvent("jack-objectspawner_lib:client:registerExistingObject", dedicatedHostNetID, Config.Banks[CurrentBank]["objects"]["vaultDoor"]["model"], vaultPos, function(vault)
+        TriggerEvent("jack-objectspawner_lib:client:registerExistingObject", Config.Banks[CurrentBank]["objects"]["vaultDoor"]["model"], vaultPos, function(vault)
                   local openRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["openHeading"]
                   local closeRotation = Config.Banks[CurrentBank]["objects"]["vaultDoor"]["closeHeading"]
                   if setLocked then
@@ -142,7 +142,7 @@ Finds an existing object with modelName and position. If it exists and is networ
 *"jack-objectspawner_lib:client:deleteAllPropsInArea"*
 
 **Params**:
-- dedicatedHost (boolean) (Specific variable for my bank script. You will see its use in description. Ideally this function is not highly coupled, I will revisit this)
+- dedicatedHostNum (int) (Specific variable for my bank script. You will see its use in description. Ideally this function is not highly coupled, I will revisit this)
 - modelName (must be string version of name, not hashkey)
 - position (Can be vector3 or vector4)
 - completeFunc (Inline function that is called with entity as argument when event is complete)
@@ -154,7 +154,7 @@ If the found entity is networked.
         If we are the dedicated host
                 Tell the server to delete the object, if the server deletion failed then reduce an attempt counter (only 3 attempts)
         If we are not the dedicated host
-                Leave the object. In the bank script players can walk into the bank and will need to delete any local props but not delete the newly created synced props that the dedicated host created initally. So instead we ask the dedicated host if they are aware of this entity by this netID. 
+                Leave the object. In the bank script players can walk into the bank and will need to delete any local props but not delete the newly created synced props that the dedicated host created initally. So instead we ask the dedicated host (using number to call their client) if they are aware of this entity by this netID. 
                         If they are not, we can delete it because its just strangely networked but only appearing for us.
                         If they are, do not touch it, this is the entity we will use for our interactions (in bank script)
 The entity found is not networked.
@@ -199,5 +199,5 @@ Save to clipboard
 
 ### Performance
 #### IDLE
-![image](https://github.com/jackfmaxwell/jack-objectspawn_lib/assets/34254615/5fce9626-2392-42e5-bce3-cfb371ae9b56)
-#### ACTIVE (Only active while script is creating objects and initializing zones
+![alt text](image.png)
+#### ACTIVE (Only active while script is creating objects and initializing zones)
