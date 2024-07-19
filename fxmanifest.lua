@@ -6,7 +6,9 @@ author 'JACK'
 
 description 'Object spawner'
 
-version '0.1'
+version '1.0.0'
+
+license 'GPL3.0'
 
 lua54 'yes'
 
