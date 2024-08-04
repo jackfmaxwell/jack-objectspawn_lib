@@ -187,6 +187,15 @@ RegisterNetEvent("jack-objectspawner_lib:client:setEntityRotation", function(ent
         SetEntityRotation(NetworkGetEntityFromNetworkId(entityNetID), rotation.x, rotation.y, rotation.z, 2, true)
     end
 end)
+RegisterNetEvent("jack-objectspawner_lib:client:deleteEntity", function(entityNetID)
+    print("delete entity")
+    local entity = NetworkGetEntityFromNetworkId(entityNetID)
+    SetEntityAsMissionEntity(entity, true, true)
+    SetNetworkIdExistsOnAllMachines(entityNetID, true)
+    SetNetworkIdCanMigrate(entityNetID, true)
+    NetworkSetObjectForceStaticBlend(entity, true)
+    DeleteEntity(entity)
+end)
 --this one works to set rotation for everyone.
 RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObjectWithRotation", function (modelName, position, rotation, completeFunc) -- createIfCantFind
     local entity = ConsistentGetClosestObject(position, modelName, 0.2, 1.5)

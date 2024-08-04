@@ -140,6 +140,17 @@ local function DisplayObjectDetails(entity)
             EndTextCommandDisplayText(posX + paddingLeft, posY)
             posY = posY + textSpacing
         end
+        SetTextScale(0.35, 0.35)
+        SetTextFont(4)
+        SetTextDropshadow(1.0, 0, 0, 0, 255)
+        SetTextEdge(1, 0, 0, 0, 255)
+        SetTextColour(255, 255, 255, 215)
+        SetTextJustification(1)
+        BeginTextCommandDisplayText('STRING')
+        AddTextComponentSubstringPlayerName("Entity: "..entity)
+        SetTextScale(0.35, 0.35)
+        EndTextCommandDisplayText(posX + paddingLeft, posY)
+        posY = posY + textSpacing
     end
     if entityType==2 then --Vehicles
     end

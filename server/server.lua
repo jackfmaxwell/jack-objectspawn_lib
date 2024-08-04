@@ -1,4 +1,11 @@
 RegisterNetEvent("jack-objectspawner_lib:server:setEntityRotationRPC", function (entityNetID, heading, rotation)
+    local entity = NetworkGetEntityFromNetworkId(entityNetID)
+    if heading~=nil then
+        SetEntityHeading(NetworkGetEntityFromNetworkId(entityNetID), heading)
+    end
+    if rotation~=nil then
+        SetEntityRotation(NetworkGetEntityFromNetworkId(entityNetID), rotation.x, rotation.y, rotation.z, 2, true)
+    end
     TriggerClientEvent("jack-objectspawner_lib:client:setEntityRotation", -1, entityNetID, heading, rotation)
 end)
 
@@ -20,25 +27,28 @@ lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(sou
         local modelName = GetEntityModel(entity)
         local key = modelName..position.x..position.y..position.z
         DeleteEntity(entity)
+        TriggerClientEvent("jack-objectspawner_lib:client:deleteEntity", -1, entityNetID)
         creatingQueue[key]=nil
         alreadyCreated[key]=nil
-        --print("deleted ", entityNetID, " ", modelName)
+        print("deleted ", entityNetID, " ", modelName)
         return true
     else
-        --print("didnt find entity for ", entityNetID, " a ", modelName)
+        print("didnt find entity for ", entityNetID, " a ", modelName)
         return false
     end
 end)
 
 lib.callback.register("jack-objectspawner_lib:server:createObject", function(source, modelName, position)
     local key = modelName..position.x..position.y..position.z
+    print(modelName, " key: ", key)
     if alreadyCreated[key]~=nil then
        -- print("already created ", modelName)
-        local entity = NetworkGetEntityFromNetworkId(alreadyCreated[key])
-        Wait(10)
+        local entity = NetworkGetEntityFromNetworkId(tonumber(alreadyCreated[key]))
+        print("model ", modelName, " entity: ", entity)
         if (entity == 0 or entity==nil) or GetHashKey(modelName)~=GetEntityModel(entity) then
             --doesnt exist anymore!
-            --print(modelName , " doesnt exist anymore")
+            print(modelName , " doesnt exist anymore")
+            TriggerClientEvent("jack-objectspawner_lib:client:deleteEntity", -1, tonumber(alreadyCreated[key]))
             alreadyCreated[key] = nil
             creatingQueue[key] = true
             local doorflag = IsModelADoor(modelName)
@@ -51,17 +61,18 @@ lib.callback.register("jack-objectspawner_lib:server:createObject", function(sou
                 Wait(10)
             end
             local createdObjectNetID = NetworkGetNetworkIdFromEntity(newEntity)
-            --print("Created "..modelName.." with netID: ", createdObjectNetID)
+            print("Created "..modelName.." with netID: ", createdObjectNetID)
             alreadyCreated[key] = createdObjectNetID
             creatingQueue[key]=nil
         end
+        print("return found ", modelName)
         return alreadyCreated[key]
     end
     if creatingQueue[key]~=nil then
         while creatingQueue[key]~=nil do
             Wait(500)
         end
-        --print('waited for created queue : ', alreadyCreated[key])
+        print('waited for created queue : ', alreadyCreated[key])
         return alreadyCreated[key]
     end
     creatingQueue[key] = true
