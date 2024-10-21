@@ -507,6 +507,7 @@ end, false)
 
 
 RegisterNetEvent("jack-objectspawner_lib:client:testPlaceObject", function(modelName)
+    print("place object")
     local objectName = modelName or "prop_bench_01a"
     local playerPed = PlayerPedId()
     local offset = GetOffsetFromEntityInWorldCoords(playerPed, 0, 1.0, 0)

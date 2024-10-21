@@ -104,18 +104,11 @@ lib.addCommand('testPlaceObject', {
     },
     restricted = 'group.admin'
 }, function(source, args, raw)
-    TriggerClientEvent("jack-objectspawner_lib:client:testPlaceObject", args.model)
+    TriggerClientEvent("jack-objectspawner_lib:client:testPlaceObject", tonumber(source), args.model)
 end)
 
-lib.addCommand('testPrintAllObjects1', {
+lib.addCommand('showAllNetThings', {
     help = 'dev',
-    params = {
-        {
-            name = 'deleteprops',
-            type = 'number',
-            help = 'Delete props?',
-        },
-    },
     restricted = 'group.admin'
 }, function(source, args, raw)
     local numberNetObjects = 0
@@ -123,9 +116,6 @@ lib.addCommand('testPrintAllObjects1', {
         local netID = NetworkGetNetworkIdFromEntity(entity)
         if netID~=0 and netID ~=nil then
             numberNetObjects+=1
-            if args.deleteprops==1 then
-                DeleteEntity(entity)
-            end
             print(netID)
         end
     end
@@ -150,7 +140,7 @@ lib.addCommand('testPrintAllObjects1', {
     print("Number net vehicles: ", numberNetVehicles)
 end)
 
-lib.addCommand('testPrintAllObjects2', {
+lib.addCommand('showNetObjectsForScripts', {
     help = 'dev',
     restricted = 'group.admin'
 }, function(source, args, raw)
