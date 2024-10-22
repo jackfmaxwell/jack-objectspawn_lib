@@ -10,7 +10,7 @@ RegisterNetEvent("jack-objectspawner_lib:server:setEntityRotationRPC", function 
 end)
 
 lib.callback.register("jack-objectspawner_lib:server:doesDedicatdHostKnowEntity", function(source, dedicatedHost, entityNetID)
-    print("does dedicated host: ", dedicatedHost, " know about entity: " , entityNetID)
+    if Config.DebugPoly then print("does dedicated host: ", dedicatedHost, " know about entity: " , entityNetID) end
     local result = lib.callback.await("jack-objectspawner_lib:client:doesEntityExist", dedicatedHost, entityNetID)
     return result
 end)
@@ -30,29 +30,32 @@ lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(sou
         TriggerClientEvent("jack-objectspawner_lib:client:deleteEntity", -1, entityNetID)
         creatingQueue[key]=nil
         alreadyCreated[key]=nil
-        print("deleted ", entityNetID, " ", modelName)
+        if Config.DebugPoly then print("deleted ", entityNetID, " ", modelName) end
         return true
     else
-        print("didnt find entity for ", entityNetID, " a ", modelName)
+        if Config.DebugPoly then print("didnt find entity for ", entityNetID, " a ", modelName) end
         return false
     end
 end)
 
 lib.callback.register("jack-objectspawner_lib:server:createObject", function(source, modelName, position)
-    local key = modelName..position.x..position.y..position.z
-    print(modelName, " key: ", key)
+    local key = modelName
+    if position then
+        key = key .. position.x..position.y..position.z
+    end
+    if Config.DebugPoly then print(modelName, " key: ", key) end
     if alreadyCreated[key]~=nil then
        -- print("already created ", modelName)
         local entity = NetworkGetEntityFromNetworkId(tonumber(alreadyCreated[key]))
-        print("model ", modelName, " entity: ", entity)
+        if Config.DebugPoly then print("model ", modelName, " entity: ", entity) end
         if (entity == 0 or entity==nil) or GetHashKey(modelName)~=GetEntityModel(entity) then
             --doesnt exist anymore!
-            print(modelName , " doesnt exist anymore")
+            if Config.DebugPoly then print(modelName , " doesnt exist anymore") end
             TriggerClientEvent("jack-objectspawner_lib:client:deleteEntity", -1, tonumber(alreadyCreated[key]))
             alreadyCreated[key] = nil
             creatingQueue[key] = true
             local doorflag = IsModelADoor(modelName)
-            print(modelName, " is door? : ", doorflag)
+            if Config.DebugPoly then  print(modelName, " is door? : ", doorflag) end
             local newEntity = CreateObjectNoOffset(GetHashKey(modelName), position.x, position.y, position.z, true, true, doorflag)
             while not DoesEntityExist(newEntity) do
                 Wait(10)
@@ -61,30 +64,30 @@ lib.callback.register("jack-objectspawner_lib:server:createObject", function(sou
                 Wait(10)
             end
             local createdObjectNetID = NetworkGetNetworkIdFromEntity(newEntity)
-            print("Created "..modelName.." with netID: ", createdObjectNetID)
+            if Config.DebugPoly then print("Created "..modelName.." with netID: ", createdObjectNetID) end
             alreadyCreated[key] = createdObjectNetID
             creatingQueue[key]=nil
         end
-        print("return found ", modelName)
+        if Config.DebugPoly then print("return found ", modelName) end
         return alreadyCreated[key]
     end
     if creatingQueue[key]~=nil then
         while creatingQueue[key]~=nil do
             Wait(500)
         end
-        print('waited for created queue : ', alreadyCreated[key])
+        if Config.DebugPoly then print('waited for created queue : ', alreadyCreated[key]) end
         return alreadyCreated[key]
     end
     creatingQueue[key] = true
     local doorflag = IsModelADoor(modelName)
-    print(modelName, " is door? : ", doorflag)
+    if Config.DebugPoly then print(modelName, " is door? : ", doorflag) end
     local entity = CreateObjectNoOffset(GetHashKey(modelName), position.x, position.y, position.z, true, true, doorflag)
     while not DoesEntityExist(entity) do
         Wait(10)
     end
     local createdObjectNetID = NetworkGetNetworkIdFromEntity(entity)
     alreadyCreated[key] = createdObjectNetID
-    print("Created "..modelName.." with netID: ", createdObjectNetID)
+    if Config.DebugPoly then print("Created "..modelName.." with netID: ", createdObjectNetID) end
     creatingQueue[key]=nil
     return createdObjectNetID
 end)
