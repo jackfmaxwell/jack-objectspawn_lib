@@ -67,40 +67,23 @@ function SerializeTable(tbl, indent, visited)
     return table.concat(result)
 end
 
-function ConsistentGetClosestObject(position, modelName, range, range2, iteration, timesFound)
-    if not iteration then iteration = 0 end
-    if not timesFound then timesFound = 0 end
-    if not range2 then range2=range end
-    print("[ConsistentGetClosestObject]: ", modelName, " iter: ", iteration)
-    if iteration>2 then return nil end
-    local entity = GetClosestObjectOfType(position.x, position.y, position.z, range, GetHashKey(modelName), false, false, false)
-    Wait(10) --let GetClosestObjectOfType return
-    if entity==0 then --didnt find anything. wait some time and then try again
-        Wait(10)
-        return ConsistentGetClosestObject(position, modelName, range2, nil, (iteration+1), timesFound)
-    else --found it
-        local distance = (vector3(position.x, position.y, position.z)-GetEntityCoords(entity))
-        if (distance.x == 0 and distance.y==0) or range>=3.0 then
-            timesFound+=1
-            if timesFound>=1 then return entity
-            else return ConsistentGetClosestObject(position, modelName, range2, nil, iteration+1, timesFound) end
-        else
-            Wait(10)
-            return ConsistentGetClosestObject(position, modelName, range2, nil, (iteration+1), timesFound)
+function ConsistentGetClosestObject(position, modelName)
+    local objectPool = GetGamePool("CObject")
+    for i=0, #objectPool do
+        if #(position-GetEntityCoords(objectPool[i]) < 1 then
+            return objectPool[i]
         end
     end
 end
-function ConsistentDeleteObject(modelName, entity, iteration)
-    if not iteration then iteration = 0 end
-    if iteration>=3 then warn("\n[ConsistentDeleteObject]: Couldnt local delete ", modelName.."\n") return false end --tried 3 times didnt work, give up
-    SetEntityAsMissionEntity(entity, true, true)
-    Wait(10)
-    DeleteObject(entity)
-    Wait(50) --Wait for delete to process
-    if DoesEntityExist(entity) and EntityIDExists(entity) and GetEntityModel(entity)==GetHashKey(modelName) then --Still exists? try again
-        ConsistentDeleteObject(modelName, entity, iteration+1)
-    else
-        return true
+function ConsistentDeleteObject(modelName, entity, position)
+    if EntityIDExists(entity) then
+        SetEntityAsMissionEntity(entity, true, true)
+        Wait(10)
+        DeleteObject(entity)
+        Wait(50) --Wait for delete to process
+        if EntityIDExists(ConsistentGetClosestObject(position, modeName)) then
+            --Ask server to attempt
+        end
     end
 end
 
