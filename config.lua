@@ -5,10 +5,6 @@ Config.SpawnedDoorModels = {
     "xm_prop_iaa_base_door_01"
 }
 
-Config.RemoveAllNetObjectsFromFollowingScripts = {
-    "qs-smartphone-pro"
-}
-
-Config.BlockScriptCreatingNetObjects = {
-    "qs-smartphone-pro"
-}
+Config.DeletetionExpectedExecutionTime = 4000
+Config.ExpectedExecutionTime = 3000
+Config.LoopTime = 500

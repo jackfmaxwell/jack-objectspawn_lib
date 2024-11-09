@@ -14,14 +14,6 @@ function IsModelADoor(value)
     end
     return false
 end
-function IsScriptInRemoveList(value)
-    for _, script in ipairs(Config.RemoveAllNetObjectsFromFollowingScripts) do
-        if script == value then
-            return true
-        end
-    end
-    return false
-end
 function IndexOf(tbl, value)
     for i = 1, #tbl do
         if tbl[i][1] == value[1] and tbl[i][2] == value[2] then
@@ -44,13 +36,9 @@ AddEventHandler('onResourceStart', function(resourceName)
             if script~=nil then
                 numberNetObjects+=1
                 if script=="jack-objectspawn_lib" then
-                    DeleteEntity(entity)
-                    numberNetObjects-=1
+                    --DeleteEntity(entity)
                 end
-                if IsScriptInRemoveList(script) then
-                    DeleteEntity(entity)
-                    numberNetObjects-=1
-                end
+                
             end
         end
     end
@@ -60,31 +48,31 @@ AddEventHandler('onResourceStart', function(resourceName)
     if numberNetObjects>60 then
         warn("\n\nFound: ".. numberNetObjects.. " already existing. jack-objectspawn_lib may encounter issues when creating objects as space for new objects is low\n\n")
     end
-
-    if #Config.BlockScriptCreatingNetObjects>0 then
-        CreateThread(function()
-            while true do
-                Wait(1000*60*15)
-                for _, entity in ipairs(GetAllObjects()) do
-                    local netID = NetworkGetNetworkIdFromEntity(entity)
-                    if netID~=0 and netID ~=nil then
-                        local script = GetEntityScript(entity)
-                        if script~=nil then
-                            if IsScriptInRemoveList(script) then
-                                DeleteEntity(entity)
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
-    
 end)
 
 
 
+lib.addCommand('teleportToNetID', {
+    help = 'dev',
+    params = {
+        {
+            name = 'netID',
+            type = 'number',
+            help = 'NetID',
+        },
+    },
+    restricted = 'group.admin'
+}, function(source, args, raw)
+    TriggerClientEvent("jack-objectspawner_lib:client:teleportToNetID", tonumber(source), args.netID)
+end)
 
+
+lib.addCommand('viewNetIDs', {
+    help = 'dev',
+    restricted = 'group.admin'
+}, function(source, args, raw)
+    TriggerClientEvent("jack-objectspawner_lib:client:showAllObjectEntityIDAndNetID", tonumber(source))
+end)
 
 lib.addCommand('bankConfigEditor', {
     help = 'dev',

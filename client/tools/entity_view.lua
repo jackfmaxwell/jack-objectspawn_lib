@@ -265,7 +265,7 @@ local function DisplayObjectDetails(entity)
         local hit, endCoords, entityHit = RayCastGamePlayCamera(1000.0)
         DrawLine(pos.x, pos.y, pos.z, endCoords.x, endCoords.y, endCoords.z, rayColor.r, rayColor.g, rayColor.b, rayColor.a)
         DrawSphere(endCoords.x, endCoords.y, endCoords.z, 0.05, rayColor.r, rayColor.g, rayColor.b, 0.5)
-        Wait(20)
+        Wait(1)
         if hit and (IsEntityAVehicle(entityHit) or IsEntityAPed(entityHit) or IsEntityAnObject(entityHit)) then
           hitObject = entityHit
           rayColor = { r = 0, g = 255, b = 0, a = 0.7 }
@@ -277,4 +277,56 @@ local function DisplayObjectDetails(entity)
       end
     end)
   end)
+
+  function Draw3DText(x, y, z, scl_factor, text)
+    local onScreen, _x, _y = World3dToScreen2d(x, y, z)
+    local p = GetGameplayCamCoords()
+    local distance = GetDistanceBetweenCoords(p.x, p.y, p.z, x, y, z, 1)
+    local scale = (1 / distance) * 2
+    local fov = (1 / GetGameplayCamFov()) * 100
+    local scale = scale * fov * scl_factor
+    if onScreen then
+        SetTextScale(0.0, scale)
+        SetTextFont(0)
+        SetTextProportional(1)
+        SetTextColour(255, 255, 255, 215)
+        SetTextDropshadow(0, 0, 0, 0, 255)
+        SetTextEdge(2, 0, 0, 0, 150)
+        SetTextDropShadow()
+        SetTextOutline()
+        SetTextEntry("STRING")
+        SetTextCentre(1)
+        AddTextComponentString(text)
+        DrawText(_x, _y)
+    end
+end
+
+  RegisterNetEvent("jack-objectspawner_lib:client:showAllObjectEntityIDAndNetID", function()
+    CreateThread(function()
+      while true do
+        local gamePool = GetGamePool("CObject")
+        for i=1, #gamePool do
+          if gamePool[i] then
+            local netID="0"
+            if NetworkGetEntityIsNetworked(gamePool[i]) then
+                netID = NetworkGetNetworkIdFromEntity(gamePool[i])
+            end
   
+            local coords = GetEntityCoords(gamePool[i])
+            local dist = #(coords- GetEntityCoords(PlayerPedId()))
+            if dist<400 then
+              Draw3DText(coords.x, coords.y, coords.z, 0.2, ("Entity: "..gamePool[i].."\nNet: "..netID))
+            end
+          end
+        end
+        Wait(5)
+      end
+    end)
+end)
+
+RegisterNetEvent("jack-objectspawner_lib:client:teleportToNetID", function(netID)
+  local entity = NetworkGetEntityFromNetworkId(netID)
+  print("Associated entity: ", entity)
+  local coords = GetEntityCoords(entity)
+  SetEntityCoords(PlayerPedId(), coords.x, coords.y, coords.z, false, false, false, false)
+end)

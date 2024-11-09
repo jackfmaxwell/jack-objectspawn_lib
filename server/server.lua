@@ -1,3 +1,9 @@
+function EntityIDExists(id)
+    if id~=0 and id~=nil then return true
+    else return false end
+end
+
+
 RegisterNetEvent("jack-objectspawner_lib:server:setEntityRotationRPC", function (entityNetID, heading, rotation)
     local entity = NetworkGetEntityFromNetworkId(entityNetID)
     if heading~=nil then
@@ -27,7 +33,7 @@ lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(sou
         local modelName = GetEntityModel(entity)
         local key = modelName..position.x..position.y..position.z
         DeleteEntity(entity)
-        TriggerClientEvent("jack-objectspawner_lib:client:deleteEntity", -1, entityNetID)
+        TriggerClientEvent("jack-objectspawner_lib:client:deleteEntityRPC", -1, entityNetID)
         creatingQueue[key]=nil
         alreadyCreated[key]=nil
         if Config.DebugPoly then print("deleted ", entityNetID, " ", modelName) end
@@ -51,7 +57,7 @@ lib.callback.register("jack-objectspawner_lib:server:createObject", function(sou
         if (entity == 0 or entity==nil) or GetHashKey(modelName)~=GetEntityModel(entity) then
             --doesnt exist anymore!
             if Config.DebugPoly then print(modelName , " doesnt exist anymore") end
-            TriggerClientEvent("jack-objectspawner_lib:client:deleteEntity", -1, tonumber(alreadyCreated[key]))
+            TriggerClientEvent("jack-objectspawner_lib:client:deleteEntityRPC", -1, tonumber(alreadyCreated[key]))
             alreadyCreated[key] = nil
             creatingQueue[key] = true
             local doorflag = IsModelADoor(modelName)
