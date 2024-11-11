@@ -7,4 +7,7 @@ Config.SpawnedDoorModels = {
 
 Config.DeletetionExpectedExecutionTime = 4000
 Config.ExpectedExecutionTime = 3000
+Config.FindIDExpectedExecutionTime = 1000
 Config.LoopTime = 500
+
+Config.DebugPoly = false

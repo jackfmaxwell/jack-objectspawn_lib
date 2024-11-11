@@ -26,7 +26,7 @@ end
 function GetNetIDFromEntity(entity, model)
     if not model then model="unknown" end
     if IDExists(entity) then
-        local timer = Config.ExpectedExecutionTime
+        local timer = Config.FindIDExpectedExecutionTime
         CreateThread(function()
             while timer>=-50 do
                 timer-=1
@@ -67,7 +67,7 @@ end
 function GetEntityFromNetID(netID, model)
     if not model then model="unknown" end
     if IDExists(netID) then
-        local timer = Config.ExpectedExecutionTime
+        local timer = Config.FindIDExpectedExecutionTime
         CreateThread(function()
             while timer>=-50 do
                 timer-=1
@@ -120,39 +120,58 @@ function SerializeTable(tbl, indent, visited)
     return table.concat(result)
 end
 
-function ConsistentGetClosestObject(position, modelName)
+function ConsistentGetClosestObject(data)
+    local position = data.position
+    local modelName = data.modelName
+    local dontSearchPastRange = data.dontSearchPastRange
+    local ignoreList = data.ignoreList
     if not position then
-        error("[ConsistentGetClosestObject]: NO POSITION FOR: ".. modelName)
+        error("[ConsistentGetClosestObject]: NO POSITION FOR: ".. (modelName or "unknown"))
+    end
+    dontSearchPastRange = tonumber(dontSearchPastRange)
+    if not dontSearchPastRange then
+        dontSearchPastRange = 200
     end
     local objectPool = GetGamePool("CObject")
     local position = vector3(position.x, position.y, position.z)
+    local possibleObjects = {}
     for i=0, #objectPool do
-        local entityCoords = GetEntityCoords(objectPool[i])
-        if #(position-entityCoords) < 1 and GetEntityModel(objectPool[i])==GetHashKey(modelName) then
-            return objectPool[i]
+        if GetEntityModel(objectPool[i])==GetHashKey(modelName) then
+            local ignore = false
+            if ignoreList then
+                for _, ignoreEnt in ipairs(ignoreList) do
+                    if objectPool[i]==ignoreEnt then
+                        ignore = true
+                    end
+                end
+            end
+            if not ignore then
+                local entityCoords = GetEntityCoords(objectPool[i])
+                if #(position-entityCoords) < (dontSearchPastRange) then
+                    table.insert(possibleObjects, {obj=objectPool[i], dist=#(position-entityCoords)})
+                end
+            end
         end
     end
+    if #possibleObjects>0 then
+        local closestObj = possibleObjects[1].obj
+        local closestObjDist = possibleObjects[1].dist
+        for _, data in ipairs(possibleObjects) do
+            if data.dist<closestObjDist and data.dist<dontSearchPastRange then
+                closestObj = data.obj
+                closestObjDist=data.dist
+            end
+        end
+        return closestObj
+    end
+    return nil
 end
 
-function ConsistentDeleteObject(modelName, entity, position)
+function ConsistentDeleteObject(modelName, entity)
     if IDExists(entity) then
         SetEntityAsMissionEntity(entity, true, true)
         Wait(10)
         DeleteObject(entity)
         Wait(50) --Wait for delete to process
-        local foundAfterDeletion = ConsistentGetClosestObject(position, modelName)
-        if IDExists(foundAfterDeletion) then
-            if NetworkGetEntityIsNetworked(foundAfterDeletion) then
-                lib.callback("jack-objectspawner_lib:server:deleteObject", false, function(result)
-                    if not result then
-                        NetworkUnregisterNetworkedEntity(foundAfterDeletion)
-                        ConsistentDeleteObject(modelName, foundAfterDeletion)
-                    else
-                        print("\n[deleteAllPropsInArea]: Server deleted ", modelName, " netID:", NetworkGetNetworkIdFromEntity(foundAfterDeletion))
-                    end
-                end, NetworkGetNetworkIdFromEntity(foundAfterDeletion), modelName)
-            end
-            --Ask server to attempt deletion
-        end
     end
 end

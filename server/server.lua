@@ -26,6 +26,7 @@ local alreadyCreated = {}
 local creatingQueue = {}
 
 lib.callback.register("jack-objectspawner_lib:server:deleteObject", function(source, entityNetID, modelName)
+    print("delete: ", modelName)
     if entityNetID==nil or entityNetID==0 then print("object doesnt have netid") return false end
     local entity = NetworkGetEntityFromNetworkId(entityNetID)
     if entity~=nil and entity~=0 then
@@ -51,7 +52,7 @@ lib.callback.register("jack-objectspawner_lib:server:createObject", function(sou
     end
     if Config.DebugPoly then print(modelName, " key: ", key) end
     if alreadyCreated[key]~=nil then
-       -- print("already created ", modelName)
+        print("already created ", modelName)
         local entity = NetworkGetEntityFromNetworkId(tonumber(alreadyCreated[key]))
         if Config.DebugPoly then print("model ", modelName, " entity: ", entity) end
         if (entity == 0 or entity==nil) or GetHashKey(modelName)~=GetEntityModel(entity) then

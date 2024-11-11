@@ -1,7 +1,21 @@
 --Find an entity (create locally or networked if not found)
-RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (modelName, position, canCreateIfMissing, registerNetworked, completeFunc)
-    local entity = ConsistentGetClosestObject(position, modelName)
-    if not IDExists(entity) then
+--- @param data table
+-- modelName
+-- position
+-- canCreateIfMissing
+-- registerNetworked
+-- dontSearchPastRange
+-- completeFunc
+RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", function (data)
+    local modelName = data.modelName
+    local position = data.position
+    local canCreateIfMissing = data.canCreateIfMissing
+    local registerNetworked = data.registerNetworked
+    local dontSearchPastRange = data.dontSearchPastRange
+    local completeFunc = data.completeFunc
+
+    local entity = ConsistentGetClosestObject({position=position, modelName = modelName, dontSearchPastRange = dontSearchPastRange})
+    if not (IDExists(entity) and entity) then
         if canCreateIfMissing then
             if registerNetworked then
                 lib.callback("jack-objectspawner_lib:server:createObject", false, function(netID)
@@ -76,6 +90,42 @@ RegisterNetEvent("jack-objectspawner_lib:client:registerExistingObject", functio
 end)
 
 
+-- modelName
+-- nearPosition
+-- completeFunc
+RegisterNetEvent("jack-objectspawner_lib:client:findAllObjectsOfModel", function (data)
+    local modelNameList = data.modelNameList
+    local position = data.position
+    local completeFunc = data.completeFunc
+
+    local allEntities = {}
+    local timer = Config.ExpectedExecutionTime
+    CreateThread(function()
+        while timer>=-50 do
+            timer-=1
+            Wait(1)
+        end
+    end)
+    for _, modelName in ipairs(modelNameList) do
+        local entity = ConsistentGetClosestObject({position=position, modelName = modelName, ignoreList=allEntities})
+        while IDExists(entity) and entity and timer>0 do
+            if not (IDExists(entity) and entity) then
+                --found them all
+                break
+            else
+                --add to all Entities
+                table.insert(allEntities, entity)
+            end
+            entity = ConsistentGetClosestObject({position=position, modelName = modelName, ignoreList=allEntities})
+            Wait(1)
+        end
+    end
+   if completeFunc then
+    completeFunc(allEntities)
+   end
+end)
+
+
 --RPC needed for client to check if dedicated host is aware of entity
 lib.callback.register("jack-objectspawner_lib:client:doesEntityExist", function(entityNetID)
     local entity = GetEntityFromNetID(entityNetID)
@@ -97,8 +147,12 @@ RegisterNetEvent("jack-objectspawner_lib:client:setEntityRotation", function(ent
         end
     end
 end)
-RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(modelName, position, completeFunc)
-    local entity = ConsistentGetClosestObject(position, modelName)
+RegisterNetEvent("jack-objectspawner_lib:client:createObject", function(data)
+    local modelName = data.modelName
+    local position = data.position
+    local dontSearchPastRange = data.dontSearchPastRange
+    local completeFunc = data.completeFunc
+    local entity = ConsistentGetClosestObject({position=position, modelName= modelName, dontSearchPastRange=dontSearchPastRange})
     if not IDExists(entity) then
          --create locally
          local model = joaat(modelName)
